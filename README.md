@@ -1,23 +1,23 @@
 # k8s-codis
 codis on k8s
 ## namespace
-    * default 
-        * zookeeper
-    * user
-        * codis-dashboard
-        * codis-master
-        * codis-slave
-        * codis-proxy
-    * game
-        * codis-dashboard
-        * codis-master
-        * codis-slave
-        * codis-proxy
-    * kube-system
-        * dns 
-        * elasticsearch
-        * ui
-        * mornitor
+* default 
+    * zookeeper
+* user
+    * codis-dashboard
+    * codis-master
+    * codis-slave
+    * codis-proxy
+* game
+    * codis-dashboard
+    * codis-master
+    * codis-slave
+    * codis-proxy
+* kube-system
+    * dns 
+    * elasticsearch
+    * ui
+    * mornitor
 ## build images
     * Build  [https://github.com/kevinz/codis](https://github.com/kevinz/codis).
     * Copy all files under `$GOPATH/src/github.com/wandoulabs/codis/bin/` to `codis_image/conf/codis/bin`.
