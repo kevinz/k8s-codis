@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: codis-dashboard
+  namespace: user 
+spec:
+  ports:
+    - name: dashboard
+      port: 18087
+  selector:
+      app: codis-dashboard
+      product: "user"
+  type: NodePort
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: codis-dashboard
+  namespace: user 
+spec:
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: codis-dashboard
+        product: "user"
+    spec:
+      volumes:
+        - name: data
+          emptyDir: {}
+      containers:
+        - name: dashboard
+          image: reg.local:5000/codis-dashboard:test
+          ports:
+            - containerPort: 18087
+          env:
+            - name: PRODUCT
+              value: "user"
+#          env:
+#            - name: CODIS_HOME 
+#              value: /opt/codis
+#            - name: CODIS_CONF
+#              value: /opt/codis/conf/config.ini
+#          command:
+#            - /opt/codis/bin/codis-config 
+#            - -c /opt/codis/conf/config.ini
+#            - slot init
+#            - -f
+
+#            - initslot start
+#          - cd $CODIS_HOME/bin
+#          ./codis-config -c $CODIS_CONF slot init -f
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: codis-master-g1
+  namespace: user 
+spec:
+#  labels:
+#    app: codis-master
+#    group: "1" 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: codis-master
+        group: "1" 
+        product: "user"
+    spec:
+      volumes:
+       - name: data
+         hostPath: 
+           path: /opt/codis_data/master
+      containers:
+        - name: codis-master
+          env:
+            - name: GROUP
+              value: "1"
+            - name: PRODUCT
+              value: "user"
+          image: reg.local:5000/codis-master:test
+          volumeMounts:
+             - mountPath: /mnt
+               name: data 
+          ports:
+             - containerPort: 6380
+               name: redis 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codis-master-g1
+  namespace: user 
+spec:
+spec:
+  ports:
+    - name: redis
+      port: 6380
+  selector:
+    app: codis-master
+    group: "1"
+    product: "user"
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: codis-slave-g1
+  namespace: user 
+spec:
+#  labels:
+#    app: codis-slave
+#    group: "1"
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: codis-slave
+        group: "1" 
+        product: "user"
+    spec:
+      volumes:
+       - name: data
+         hostPath: 
+           path: /opt/codis_data/slave
+      containers:
+        - name: codis-slave
+          env:
+            - name:  GROUP
+              value: "1"
+            - name: PRODUCT
+              value: "user"
+          image: reg.local:5000/codis-slave:test
+          volumeMounts:
+             - mountPath: /mnt
+               name: data 
+          ports:
+             - containerPort: 6380
+               name: redis 
+---
+
