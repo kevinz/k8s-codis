@@ -1,4 +1,9 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: user
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: codis-dashboard
@@ -31,12 +36,14 @@ spec:
           emptyDir: {}
       containers:
         - name: dashboard
-          image: reg.local:5000/codis-dashboard:test
+          image: reg.local:5000/codis-dashboard:latest
           ports:
             - containerPort: 18087
           env:
             - name: PRODUCT
               value: "user"
+            - name: ZK
+              value: zookeeper.default:2181
 #          env:
 #            - name: CODIS_HOME 
 #              value: /opt/codis
@@ -81,7 +88,7 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "user"
-          image: reg.local:5000/codis-master:test
+          image: reg.local:5000/codis-master:latest
           volumeMounts:
              - mountPath: /mnt
                name: data 
@@ -133,12 +140,10 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "user"
-          image: reg.local:5000/codis-slave:test
+          image: reg.local:5000/codis-slave:latest
           volumeMounts:
              - mountPath: /mnt
                name: data 
           ports:
              - containerPort: 6380
                name: redis 
----
-

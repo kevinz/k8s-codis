@@ -9,8 +9,7 @@ BASENAME=`basename "$0"`
 function f_dashboard {
   echo "Dashboard start..."
   mkdir -p $REDIS_DIR/logs/$HOSTNAME
-  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/dashboard.log \
-  dashboard --addr 0.0.0.0:18087 --http-log $REDIS_DIR/logs/$HOSTNAME/dashboard_request.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 >/dev/null 
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/dashboard.log --product=$PRODUCT --zk=$ZK  dashboard --addr 0.0.0.0:18087 --http-log $REDIS_DIR/logs/$HOSTNAME/dashboard_request.log 
   echo "dashboard done"
 }
 
@@ -35,7 +34,7 @@ function f_add_group_master {
   echo "Add group ${GROUP} master start..." 
   master_host=CODIS_MASTER_G${GROUP}_SERVICE_HOST
   master_port=CODIS_MASTER_G${GROUP}_SERVICE_PORT
-  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/add_group.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 server add $GROUP ${!master_host}:${!master_port} master
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/add_group.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 --zk=$ZK server add $GROUP ${!master_host}:${!master_port} master
   echo "done"
 }
 
@@ -44,7 +43,7 @@ function f_add_group_slave {
   echo "Add group ${GROUP} slave start..."
   slave_host=CODIS_SLAVE_G${GROUP}_SERVICE_HOST
   slave_port=CODIS_SLAVE_G${GROUP}_SERVICE_PORT
-  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/add_group.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 server add $GROUP ${!slave_host}:${!slave_port} slave
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/add_group.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 --zk=$ZK server add $GROUP ${!slave_host}:${!slave_port} slave
   echo "done"
 }
 
@@ -52,7 +51,7 @@ function f_add_group_slave {
 # 4. Init slot & range set
 function f_initslot {
   echo "slots initializing..."
-  $CODIS_HOME/bin/codis-config -c $CODIS_CONF --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 slot init -f
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF --product=$PRODUCT --zk=$ZK --dashboard-addr=codis-dashboard:18087 slot init -f
   echo "done"
 }
 
@@ -65,7 +64,7 @@ function f_proxy {
   #echo "done"
   #echo
   echo "start new proxy..."
-  $CODIS_HOME/bin/codis-proxy -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/proxy.log --log-level info --cpu=2 --addr=0.0.0.0:19000 --http-addr=0.0.0.0:11000 --proxy-id=$HOSTNAME --product=$PRODUCT --dashboard-addr=codis-dashboard:18087
+  $CODIS_HOME/bin/codis-proxy -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/proxy.log --log-level info --cpu=2 --addr=0.0.0.0:19000 --http-addr=0.0.0.0:11000 --proxy-id=$HOSTNAME --product=$PRODUCT --zk=$ZK --dashboard-addr=codis-dashboard:18087
   echo "done"
 #  echo "sleep 3s.." && sleep 3
 #  echo "set proxy_1 online"
