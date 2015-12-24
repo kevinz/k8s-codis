@@ -1,0 +1,157 @@
+#!/bin/bash
+CODIS_HOME=/opt/codis
+CODIS_CONF=$CODIS_HOME/conf/config.ini
+PATH=$PATH:$CODIS_HOME/bin
+REDIS_DIR=/mnt
+BASENAME=`basename "$0"`
+
+# 1. Dashboard
+function f_dashboard {
+  echo "Dashboard start..."
+  mkdir -p $REDIS_DIR/logs/$HOSTNAME
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/dashboard.log \
+  dashboard --addr 0.0.0.0:18087 --http-log $REDIS_DIR/logs/$HOSTNAME/dashboard_request.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 >/dev/null 
+  echo "dashboard done"
+}
+
+# 2. Redis master
+function f_redis_master() {
+  echo "Redis start master..."
+  mkdir -p $REDIS_DIR/logs/$HOSTNAME
+  $CODIS_HOME/bin/codis-server $CODIS_HOME/conf/redis/6380.conf > $REDIS_DIR/logs/$HOSTNAME/redis.log
+  echo "done"
+}
+
+# 3. Redis slave
+function f_redis_slave() {
+  echo "Redis start slave..."
+  mkdir -p $REDIS_DIR/logs/$HOSTNAME
+  $CODIS_HOME/bin/codis-server $CODIS_HOME/conf/redis/6380.conf --slaveof codis-master-g${GROUP} 6380 > $REDIS_DIR/logs/$HOSTNAME/redis.log 
+  echo "done"
+}
+
+# 3. Add Group master
+function f_add_group_master {
+  echo "Add group ${GROUP} master start..." 
+  master_host=CODIS_MASTER_G${GROUP}_SERVICE_HOST
+  master_port=CODIS_MASTER_G${GROUP}_SERVICE_PORT
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/add_group.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 server add $GROUP ${!master_host}:${!master_port} master
+  echo "done"
+}
+
+# 3. Add Group slave
+function f_add_group_slave {
+  echo "Add group ${GROUP} slave start..."
+  slave_host=CODIS_SLAVE_G${GROUP}_SERVICE_HOST
+  slave_port=CODIS_SLAVE_G${GROUP}_SERVICE_PORT
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/add_group.log --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 server add $GROUP ${!slave_host}:${!slave_port} slave
+  echo "done"
+}
+
+
+# 4. Init slot & range set
+function f_initslot {
+  echo "slots initializing..."
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF --product=$PRODUCT --dashboard-addr=codis-dashboard:18087 slot init -f
+  echo "done"
+}
+
+
+# 5. Proxy
+function f_proxy {
+  #echo "shut down proxy_1..."
+  #cd $CODIS_HOME/bin
+  #./codis-config -c $CODIS_CONF proxy offline proxy_1
+  #echo "done"
+  #echo
+  echo "start new proxy..."
+  $CODIS_HOME/bin/codis-proxy -c $CODIS_CONF -L $REDIS_DIR/logs/$HOSTNAME/proxy.log --log-level info --cpu=2 --addr=0.0.0.0:19000 --http-addr=0.0.0.0:11000 --proxy-id=$HOSTNAME --product=$PRODUCT --dashboard-addr=codis-dashboard:18087
+  echo "done"
+#  echo "sleep 3s.." && sleep 3
+#  echo "set proxy_1 online"
+#  codis-config -c $CODIS_CONF proxy online proxy_1
+}
+
+# Help
+function f_help {
+  # Usage
+  echo
+  echo "Usage: $BASENAME [COMMAND] [start]"
+  echo
+  echo "dashboard                       : Start dashboard"
+  echo "redis                           : Start redis master"
+  echo "rediss                          : Start redis slave"
+  echo "proxy                           : Start proxy"
+  echo "initslot                        : Start initslot"
+  echo "group_master                    : Start group master"
+  echo "group_slave                     : Start group slave"
+  echo "-h, --h, --help                 : Show help"
+}
+
+# Main
+case $1 in
+    initslot)
+        if [ "$2" == "start" ]; then
+	  f_initslot
+
+	else
+	  echo "Usage: $BASENAME all start"
+	fi
+    ;;
+    group_master)
+        if [ "$2" == "start" ]; then
+	  f_add_group_master
+
+	else
+	  echo "Usage: $BASENAME all start"
+	fi
+    ;;
+    group_slave)
+        if [ "$2" == "start" ]; then
+	  f_add_group_slave
+
+	else
+	  echo "Usage: $BASENAME all start"
+	fi
+    ;;
+
+    dashboard)
+        if [ "$2" == "start" ]; then
+	  f_dashboard
+
+	else
+	  echo "Usage: $BASENAME dashboard start"
+	fi
+    ;;
+
+    redis)
+        if [ "$2" == "start" ]; then
+	  f_redis_master
+
+	else
+	  echo "Usage: $BASENAME redis/rediss start"
+	fi
+    ;;
+
+    rediss)
+        if [ "$2" == "start" ]; then
+	  f_redis_slave
+
+	else
+	  echo "Usage: $BASENAME redis/rediss start"
+	fi
+    ;;
+
+    proxy)
+        if [ "$2" == "start" ]; then
+	  f_proxy
+
+	else
+	  echo "Usage: $BASENAME proxy start"
+	fi
+    ;;
+
+    *|-h|--h|--help)
+        f_help
+    ;;
+esac

@@ -1,0 +1,40 @@
+#
+# Dockerfile - Codis
+#
+# - Build
+# docker build --rm -t codis:latest .
+#
+# - Run
+# docker run -d --name="codis" -h "codis" codis:latest
+
+# Use the base images
+#FROM ubuntu:14.04
+FROM index.alauda.cn/testbunker/docker-debian 
+RUN apt-get update && apt-get -y install supervisor
+# Codis
+ENV CODIS_HOME /opt/codis
+ENV PATH $PATH:$CODIS_HOME/bin
+ENV CODIS_CONF $CODIS_HOME/conf/config.ini
+
+RUN echo '' >> /etc/profile \
+ && echo "export CODIS_HOME=$CODIS_HOME" >> /etc/profile \
+ && echo "export CODIS_CONF=$CODIS_HOME/conf/config.ini" >> /etc/profile \
+ && echo 'export PATH=$PATH:$CODIS_HOME/bin' >> /etc/profile
+
+# Add the codis scripts
+ADD conf/codis $CODIS_HOME
+RUN chmod a+x $CODIS_HOME/bin/codis-start
+RUN chmod a+x $CODIS_HOME/bin/codis-server
+RUN chmod a+x $CODIS_HOME/bin/codis-proxy
+RUN chmod a+x $CODIS_HOME/bin/codis-config
+
+# Supervisor
+RUN mkdir -p /var/log/supervisor
+ADD conf/supervisord_dashboard.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Port
+EXPOSE 18087
+
+# Daemon
+#ENTRYPOINT ["/opt/codis/bin/codis-start"]
+CMD ["/usr/bin/supervisord"] 
