@@ -31,7 +31,7 @@ spec:
           emptyDir: {}
       containers:
         - name: dashboard
-          image: 192.168.33.251:5000/codis-dashboard:test
+          image: reg.local:5000/codis-dashboard:test
           ports:
             - containerPort: 18087
           env:
@@ -81,7 +81,7 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "user"
-          image: 192.168.33.251:5000/codis-master:test
+          image: reg.local:5000/codis-master:test
           volumeMounts:
              - mountPath: /mnt
                name: data 
@@ -133,7 +133,7 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "user"
-          image: 192.168.33.251:5000/codis-slave:test
+          image: reg.local:5000/codis-slave:test
           volumeMounts:
              - mountPath: /mnt
                name: data 
