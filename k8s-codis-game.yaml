@@ -44,31 +44,12 @@ spec:
               value: "game"
             - name: ZK
               value: zookeeper.default:2181
-#
-#          env:
-#            - name: CODIS_HOME 
-#              value: /opt/codis
-#            - name: CODIS_CONF
-#              value: /opt/codis/conf/config.ini
-#          command:
-#            - /opt/codis/bin/codis-config 
-#            - -c /opt/codis/conf/config.ini
-#            - slot init
-#            - -f
-
-#            - initslot start
-#          - cd $CODIS_HOME/bin
-#          ./codis-config -c $CODIS_CONF slot init -f
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: codis-master-g1
   namespace: game 
-spec:
-#  labels:
-#    app: codis-master
-#    group: "1" 
 spec:
   replicas: 1
   template:
@@ -113,14 +94,25 @@ spec:
     product: "game"
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: codis-slave-g1
+  namespace: user 
+spec:
+spec:
+  ports:
+    - name: redis
+      port: 6380
+  selector:
+    app: codis-slave
+    group: "1"
+    product: "user"
+---
+apiVersion: v1
 kind: ReplicationController
 metadata:
   name: codis-slave-g1
   namespace: game 
-spec:
-#  labels:
-#    app: codis-slave
-#    group: "1"
 spec:
   replicas: 1
   template:

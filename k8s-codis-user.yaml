@@ -1,9 +1,4 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: user
----
-apiVersion: v1
 kind: Service
 metadata:
   name: codis-dashboard
@@ -44,30 +39,12 @@ spec:
               value: "user"
             - name: ZK
               value: zookeeper.default:2181
-#          env:
-#            - name: CODIS_HOME 
-#              value: /opt/codis
-#            - name: CODIS_CONF
-#              value: /opt/codis/conf/config.ini
-#          command:
-#            - /opt/codis/bin/codis-config 
-#            - -c /opt/codis/conf/config.ini
-#            - slot init
-#            - -f
-
-#            - initslot start
-#          - cd $CODIS_HOME/bin
-#          ./codis-config -c $CODIS_CONF slot init -f
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: codis-master-g1
   namespace: user 
-spec:
-#  labels:
-#    app: codis-master
-#    group: "1" 
 spec:
   replicas: 1
   template:
@@ -112,14 +89,25 @@ spec:
     product: "user"
 ---
 apiVersion: v1
-kind: ReplicationController
+kind: Service
 metadata:
   name: codis-slave-g1
   namespace: user 
 spec:
-#  labels:
-#    app: codis-slave
-#    group: "1"
+spec:
+  ports:
+    - name: redis
+      port: 6380
+  selector:
+    app: codis-slave
+    group: "1"
+    product: "user"
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: codis-slave-g1
+  namespace: user 
 spec:
   replicas: 1
   template:
@@ -147,3 +135,53 @@ spec:
           ports:
              - containerPort: 6380
                name: redis 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codis-proxy
+  namespace: user 
+spec:
+spec:
+  ports:
+    - name: proxy 
+      port: 19000
+    - name: debug 
+      port: 11000
+  selector:
+    app: codis-proxy
+    product: "user"
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: codis-proxy
+  namespace: user 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: codis-proxy
+        product: "user"
+    spec:
+      volumes:
+       - name: data
+         hostPath: 
+           path: /opt/codis_data/proxy
+      containers:
+        - name: codis-proxy
+          env:
+            - name: PRODUCT
+              value: "user"
+            - name: ZK
+              value: zookeeper.default:2181
+          image: reg.local:5000/codis-proxy:latest
+          volumeMounts:
+             - mountPath: /mnt
+               name: data 
+          ports:
+             - containerPort: 19000
+               name: proxy
+             - containerPort: 11000
+               name: debug 
