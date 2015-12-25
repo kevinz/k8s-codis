@@ -52,11 +52,12 @@ codis on k8s
 #### add group slave
 `kubectl exec your_slave_pod_name --namespace=user bash codis-start group_slave start`
 
-#### set slot range of the group on codis UI
+#### UI operation
+1. set slot range of the group on codis UI
+2. mark proxy online on codis UI
 
-#### mark proxy online on codis UI
-
-#### scale up the codis-proxy rc for fun
+#### scale up the codis-proxy rc for fun (optional)
 `kubectl scale --replicas=2 --namespace=user rc codis-proxy`
 
-same for k8s-codis-game.yaml but for "game" user space.
+### start codis game cluster
+same steps for "game" user space.
