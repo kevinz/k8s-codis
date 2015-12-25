@@ -1,9 +1,4 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: game
----
-apiVersion: v1
 kind: Service
 metadata:
   name: codis-dashboard
@@ -22,7 +17,6 @@ kind: ReplicationController
 metadata:
   name: codis-dashboard
   namespace: game 
-spec:
 spec:
   replicas: 1
   template:
@@ -70,7 +64,7 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "game"
-          image: reg.local:5000/codis-server:latest
+          image: reg.local:5000/codis-master:latest
           volumeMounts:
              - mountPath: /mnt
                name: data 
@@ -84,7 +78,6 @@ metadata:
   name: codis-master-g1
   namespace: game 
 spec:
-spec:
   ports:
     - name: redis
       port: 6380
@@ -97,8 +90,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: codis-slave-g1
-  namespace: user 
-spec:
+  namespace: game 
 spec:
   ports:
     - name: redis
@@ -106,7 +98,7 @@ spec:
   selector:
     app: codis-slave
     group: "1"
-    product: "user"
+    product: "game"
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -133,10 +125,59 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "game"
-          image: reg.local:5000/codis-server:latest
+          image: reg.local:5000/codis-slave:latest
           volumeMounts:
              - mountPath: /mnt
                name: data 
           ports:
              - containerPort: 6380
                name: redis 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codis-proxy
+  namespace: game 
+spec:
+  ports:
+    - name: proxy 
+      port: 19000
+    - name: debug 
+      port: 11000
+  selector:
+    app: codis-proxy
+    product: "game"
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: codis-proxy
+  namespace: game 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: codis-proxy
+        product: "game"
+    spec:
+      volumes:
+       - name: data
+         hostPath: 
+           path: /opt/codis_data/proxy
+      containers:
+        - name: codis-proxy
+          env:
+            - name: PRODUCT
+              value: "game"
+            - name: ZK
+              value: zookeeper.default:2181
+          image: reg.local:5000/codis-proxy:latest
+          volumeMounts:
+             - mountPath: /mnt
+               name: data 
+          ports:
+             - containerPort: 19000
+               name: proxy
+             - containerPort: 11000
+               name: debug 

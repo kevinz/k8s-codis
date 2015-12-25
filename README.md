@@ -41,7 +41,8 @@ codis on k8s
 `kubectl create -f k8s-codis-user.yaml`
 
 #### remove fence
-`kubectl exec your_dashboard_pod_name --namespace=user codis-config -C $CODIS_CONF --product=user --zk=$ZK --dashboard-addr=codis-dashboard:18087 action remove fence`
+`kubectl exec -it your_dashboard_pod_name --namespace=user bash`
+`codis-config -C $CODIS_CONF --product=user --zk=$ZK --dashboard-addr=codis-dashboard:18087 action remove-fence`
 
 #### init slot
 `kubectl exec your_dashboard_pod_name --namespace=user bash codis-start initslot start`
