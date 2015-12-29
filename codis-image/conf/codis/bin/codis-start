@@ -57,9 +57,7 @@ function f_initslot {
 
 
 function f_config_wrapper {
-  echo "TODO"
-  #echo "first arug $2 last 2 me ${*: -2:2}"
-  #$CODIS_HOME/bin/codis-config -c $CODIS_CONF --product=$PRODUCT --zk=$ZK --dashboard-addr=codis-dashboard:18087 $@
+  $CODIS_HOME/bin/codis-config -c $CODIS_CONF --product=$PRODUCT --zk=$ZK --dashboard-addr=codis-dashboard:18087 $@
 }
 
 # 5. Proxy
@@ -91,6 +89,7 @@ function f_help {
   echo "initslot                        : Start initslot"
   echo "group_master                    : Start group master"
   echo "group_slave                     : Start group slave"
+  echo "config                          : Start config"
   echo "-h, --h, --help                 : Show help"
 }
 
@@ -158,6 +157,7 @@ case $1 in
     ;;
 
     config)
+      shift
       f_config_wrapper $@
     ;;
 
