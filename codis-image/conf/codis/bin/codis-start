@@ -17,7 +17,7 @@ function f_dashboard {
 function f_redis_master() {
   echo "Redis start master..."
   mkdir -p $REDIS_DIR/logs/$HOSTNAME
-  $CODIS_HOME/bin/codis-server $CODIS_HOME/conf/redis/6380.conf > $REDIS_DIR/logs/$HOSTNAME/redis.log
+  $CODIS_HOME/bin/codis-server $CODIS_HOME/conf/redis/6380.conf --maxmemory $MAXMEMORY > $REDIS_DIR/logs/$HOSTNAME/redis.log
   echo "done"
 }
 
@@ -25,7 +25,7 @@ function f_redis_master() {
 function f_redis_slave() {
   echo "Redis start slave..."
   mkdir -p $REDIS_DIR/logs/$HOSTNAME
-  $CODIS_HOME/bin/codis-server $CODIS_HOME/conf/redis/6380.conf --slaveof codis-master-g${GROUP} 6380 > $REDIS_DIR/logs/$HOSTNAME/redis.log 
+  $CODIS_HOME/bin/codis-server $CODIS_HOME/conf/redis/6380.conf --maxmemory $MAXMEMORY --slaveof codis-master-g${GROUP} 6380 > $REDIS_DIR/logs/$HOSTNAME/redis.log 
   echo "done"
 }
 

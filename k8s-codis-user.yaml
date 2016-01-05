@@ -64,6 +64,8 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "user"
+            - name: MAXMEMORY
+              value: "500M"
           image: reg.local:5000/codis-master:latest
           volumeMounts:
              - mountPath: /mnt
@@ -85,6 +87,7 @@ spec:
     app: codis-master
     group: "1"
     product: "user"
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -125,6 +128,8 @@ spec:
               value: "1"
             - name: PRODUCT
               value: "user"
+            - name: MAXMEMORY
+              value: "500M"
           image: reg.local:5000/codis-slave:latest
           volumeMounts:
              - mountPath: /mnt
